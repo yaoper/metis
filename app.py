@@ -7,25 +7,23 @@ from langchain.chains import RetrievalQA
 import sys
 sys.path.append("./database") # 将父目录放入系统路径中
 from embedding import ZhipuAIEmbeddings
+from llm import ZhipuAILLM
 from langchain.vectorstores.chroma import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain.chains import ConversationalRetrievalChain
 from dotenv import load_dotenv, find_dotenv
 _ = load_dotenv(find_dotenv())    # read local .env file
 
-
-#export OPENAI_API_KEY=
-#os.environ["OPENAI_API_BASE"] = 'https://api.chatgptid.net/v1'
 zhipuai_api_key = os.environ['ZHIPUAI_API_KEY']
 
-
 def generate_response(input_text, openai_api_key):
-    llm = ChatOpenAI(temperature=0.7, openai_api_key=openai_api_key)
+    llm = ZhipuAILLM(temperature=0.7, openai_api_key=zhipuai_api_key)
     output = llm.invoke(input_text)
     output_parser = StrOutputParser()
     output = output_parser.invoke(output)
     #st.info(output)
     return output
+
 
 def get_vectordb():
     # 定义 Embeddings
