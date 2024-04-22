@@ -38,14 +38,15 @@ def get_vectordb():
     return vectordb
 
 #带有历史记录的问答链
-def get_chat_qa_chain(question:str,openai_api_key:str):
+def get_chat_qa_chain(question:str, openai_api_key:str):
     vectordb = get_vectordb()
-    llm = ChatOpenAI(model_name = "gpt-3.5-turbo", temperature = 0,openai_api_key = openai_api_key)
+    llm = ZhipuAILLM(temperature=0.7, openai_api_key=zhipuai_api_key)
+    # llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, openai_api_key=zhipuai_api_key)
     memory = ConversationBufferMemory(
         memory_key="chat_history",  # 与 prompt 的输入变量保持一致。
         return_messages=True  # 将以消息列表的形式返回聊天记录，而不是单个字符串
     )
-    retriever=vectordb.as_retriever()
+    retriever = vectordb.as_retriever()
     qa = ConversationalRetrievalChain.from_llm(
         llm,
         retriever=retriever,
@@ -55,20 +56,21 @@ def get_chat_qa_chain(question:str,openai_api_key:str):
     return result['answer']
 
 #不带历史记录的问答链
-def get_qa_chain(question:str,openai_api_key:str):
+def get_qa_chain(question:str, openai_api_key:str):
     vectordb = get_vectordb()
-    llm = ChatOpenAI(model_name = "gpt-3.5-turbo", temperature = 0,openai_api_key = openai_api_key)
+    llm = ZhipuAILLM(temperature=0.7, openai_api_key=zhipuai_api_key)
+    # llm = ChatOpenAI(model_name="gpt-3.5-turbo", temperature=0, openai_api_key=zhipuai_api_key)
     template = """使用以下上下文来回答最后的问题。如果你不知道答案，就说你不知道，不要试图编造答
         案。最多使用三句话。尽量使答案简明扼要。总是在回答的最后说“谢谢你的提问！”。
         {context}
         问题: {question}
         """
-    QA_CHAIN_PROMPT = PromptTemplate(input_variables=["context","question"],
-                                 template=template)
-    qa_chain = RetrievalQA.from_chain_type(llm,
-                                       retriever=vectordb.as_retriever(),
-                                       return_source_documents=True,
-                                       chain_type_kwargs={"prompt":QA_CHAIN_PROMPT})
+    QA_CHAIN_PROMPT = PromptTemplate(input_variables=["context", "question"], template=template)
+    qa_chain = RetrievalQA.from_chain_type(
+                                    llm,
+                                   retriever=vectordb.as_retriever(),
+                                   return_source_documents=True,
+                                   chain_type_kwargs={"prompt":QA_CHAIN_PROMPT})
     result = qa_chain({"query": question})
     return result["result"]
 
@@ -98,9 +100,9 @@ def main():
             # 调用 respond 函数获取回答
             answer = generate_response(prompt, openai_api_key)
         elif selected_method == "qa_chain":
-            answer = get_qa_chain(prompt,openai_api_key)
+            answer = get_qa_chain(prompt, openai_api_key)
         elif selected_method == "chat_qa_chain":
-            answer = get_chat_qa_chain(prompt,openai_api_key)
+            answer = get_chat_qa_chain(prompt, openai_api_key)
 
         # 检查回答是否为 None
         if answer is not None:
